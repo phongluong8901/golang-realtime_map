@@ -1,0 +1,130 @@
+#1---docs
+-- tech: go, kurbernets, mongo, google cloud, tyscript, rarbbitmq, docker, strip, tilt.dev, osrm
+-- perfomance, 
+
+-- defer r.Body.Close()
+Tóm lại: Luôn dùng defer r.Body.Close() ngay sau khi bạn bắt đầu làm việc với Request Body để đảm bảo Server không bị "rò rỉ" tài nguyên và luôn chạy ổn định.
+
+-- minikube
+Về cơ bản, Kubernetes thật thường chạy trên một cụm (cluster) gồm nhiều máy chủ rất phức tạp. Minikube giúp bạn giả lập toàn bộ cái cụm phức tạp đó chỉ trong một cái máy ảo duy nhất chạy ngay trên máy tính của bạn
+
+Thay vì phải tốn tiền thuê server trên AWS, Google Cloud hay Azure để học, Minikube tạo ra một node Kubernetes hoàn chỉnh ngay trong máy của bạn. Nó hỗ trợ hầu hết các tính năng của K8s như:
+DNS, Dashboard.
+NodePorts, Ingress (để bạn truy cập vào các Microservice của mình).
+ConfigMaps và Secrets.
+
+-- tilt
+Khi bạn gõ tilt up, nó sẽ:
+Theo dõi (Watch): Nó đứng canh tất cả các file trong project của bạn.
+Tự động cập nhật (Live Update): Ngay khi bạn nhấn Ctrl + S lưu code, Tilt sẽ tự động đồng bộ phần code thay đổi đó vào thẳng cái Container đang chạy trong Kubernetes mà không cần build lại toàn bộ Image.
+Giao diện trực quan (UI): Nó mở ra một cái dashboard cực đẹp ở trình duyệt (thường là localhost:10350). Ở đó bạn có thể xem log của tất cả các service (Auth service, Order service, v.v.) cùng một lúc thay vì phải gõ kubectl logs cho từng cái.
+
+-- OSRM (Open Source Routing Machine)
+OSRM (Open Source Routing Machine) là một công cụ mã nguồn mở cực kỳ mạnh mẽ dùng để tìm đường (routing) trên bản đồ. Nó sử dụng dữ liệu từ OpenStreetMap (OSM) để tính toán quãng đường ngắn nhất hoặc nhanh nhất giữa các điểm.
+
+Thay vì trả tiền cho Google Maps API (vốn rất đắt đỏ), các lập trình viên dùng OSRM để:
+Route: Tìm đường đi giữa 2 hoặc nhiều điểm (cho xe hơi, xe đạp, đi bộ).
+Table: Tính toán thời gian và khoảng cách giữa một nhóm các điểm (ví dụ: tìm xem trong 10 tài xế Uber, ai gần khách hàng nhất).
+Match: Khớp một danh sách các tọa độ GPS "nhảy lung tung" vào đúng con đường trên bản đồ (Snap-to-road).
+Trip: Giải bài toán "người giao hàng" (Traveling Salesman Problem) - tối ưu hóa thứ tự các điểm dừng.
+
+--- WebSocket
+Bình thường, web chạy theo kiểu HTTP Request-Response: Bạn hỏi - Server trả lời -> Hết. Server không bao giờ tự ý nhắn tin cho bạn được.
+WebSocket thì khác. Nó thiết lập một kết nối hai chiều (Full-duplex) và giữ kết nối đó luôn mở.
+Cả bạn và Server đều có thể gửi tin nhắn cho nhau bất cứ lúc nào.
+Giống như một cuộc gọi điện thoại: Một khi đã nhấc máy, hai bên cứ thế nói chuyện cho đến khi một bên cúp máy.
+
+
+--- gRPC
+gRPC (Google Remote Procedure Call) là một framework mã nguồn mở do Google phát triển.
+Remote Procedure Call (RPC): Nghĩa là bạn có thể gọi một hàm ở một Server khác (Server B) dễ dàng như thể bạn đang gọi một hàm nằm ngay trong code của chính mình (Server A).
+Nền tảng: Nó chạy trên HTTP/2 (nhanh và bảo mật hơn HTTP/1.1 của REST).
+
+--- .dockerignore
+là một tệp cấu hình được sử dụng trong quá trình xây dựng Docker image. Chức năng của nó tương tự như .gitignore trong Git.
+Nói một cách đơn giản: .dockerignore giúp bạn liệt kê những tệp và thư mục mà bạn KHÔNG muốn gửi vào Docker daemon khi thực hiện lệnh docker build.
+Giảm dung lượng Build Context: Khi bạn chạy lệnh build, Docker sẽ copy toàn bộ nội dung thư mục hiện tại vào "build context". Nếu thư mục có hàng GB dữ liệu không liên quan (như video, file tạm), quá trình build sẽ rất chậm.
+Bảo mật: Tránh việc vô tình copy các file nhạy cảm vào trong image (ví dụ: file .env chứa mật khẩu, file cấu hình cá nhân, các khóa SSH).
+Tăng tốc độ build: Docker sử dụng cơ chế cache. Nếu các file không liên quan thay đổi thường xuyên, Docker sẽ phải build lại từ đầu thay vì dùng cache. Loại bỏ chúng giúp tận dụng cache tốt hơn.
+Giảm kích thước Image cuối cùng: Giúp image gọn nhẹ hơn vì không chứa các file rác như node_modules cục bộ hay các file log.
+
+--- .proto
+File .proto này chính là "Bản thiết kế kỹ thuật" (Contract) cho hệ thống liên lạc giữa các Microservices của bạn. Nó sử dụng giao thức Protocol Buffers (protobuf) của Google.
+Đây là cái sướng nhất của lập trình viên. Bạn chỉ cần viết file .proto dài khoảng 30 dòng, nhưng khi chạy lệnh gen, nó sẽ tự đẻ ra hàng nghìn dòng code Go cho bạn:
+Structs: Nó tự tạo các struct PreviewTripRequest, PreviewTripResponse với đầy đủ các tag cần thiết.
+Client: Nó tạo sẵn một "cái điều khiển" (Stub). Gateway chỉ cần gọi client.PreviewTrip() là xong, không cần quan tâm giao thức mạng bên dưới.
+Server: Nó tạo sẵn một cái "khung nhà". Bạn chỉ việc vào "xây nội thất" (viết logic xử lý) cho hàm đó thôi.
+
+
+#2--- install
+
+-- vscode: extension
+markdown preview mermaid
+
+
+#3--- generate db
+
+
+#4--- generate more
+- tao cac folder, file trong folder services
+go run tools/create_service.go -name trip
+
+- tao ra cac file .proto trong shared
+make generate-proto
+
+#5--- run
+minikube start
+minikube start --driver=docker
+docker ps
+
+tilt up
+
+#6--- docker
+
+
+#7--- wsl
+wsl
+cd micoservice_go_map
+
+curl -LO https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-amd64
+sudo install minikube-linux-amd64 /usr/local/bin/minikube && rm minikube-linux-amd64
+
+minikube start
+minikube dashboard
+
+kubectl version
+kubectl config current-context
+
+
+
+curl -fsSL https://raw.githubusercontent.com/tilt-dev/tilt/master/scripts/install.sh | bash
+tilt version
+
+wget https://go.dev/dl/go1.23.0.linux-amd64.tar.gz
+sudo tar -C /usr/local -xvf go1.23.0.linux-amd64.tar.gz
+
+echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
+source ~/.bashrc
+go version  # Kiểm tra xem đã hiện version 1.23 chưa
+
+git clone https://github.com/SelfMadeEngineerCode/microservices-go-starter.git
+
+go version
+
+sudo apt install make
+
+tilt up
+
+
+
+
+
+
+
+
+
+
+
+
+
+
